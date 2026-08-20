@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Затишний Трекер</title>
+    <style>
+        :root {
+            --bg-color: #f7f4ee;
+            --card-bg: #ffffff;
+            --accent: #4a4238;
+            --accent-light: #eaf0e6;
+            --accent-green: #d8e5d0;
+            --text-main: #3d362e;
+            --text-muted: #8c8275;
+            --border: #ece6dc;
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 90px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 650px;
+            padding: 20px 16px;
+        }
+
+        /* Top Header */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        .badge-reading {
+            background: #e8f0e3;
+            color: #436037;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Widget: Mood Tracker */
+        .mood-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+
+        .widget-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mood-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mood-btn {
+            background: #faf8f5;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mood-btn .emoji { font-size: 22px; }
+        .mood-btn .label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+
+        .mood-btn:hover { background: #f2ece4; }
+        .mood-btn.active {
+            background: var(--accent-green);
+            border-color: #b8d4ab;
+        }
+        .mood-btn.active .label { color: #2e4722; }
+
+        .mood-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .mood-input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            outline: none;
+            font-size: 14px;
+            background: #faf8f5;
+        }
+
+        .btn-submit-mood {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-submit-mood:hover { opacity: 0.9; }
+
+        /* Navigation Views */
+        .view-tab { display: none; }
+        .view-tab.active { display: block; }
+
+        /* Bottom Nav Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 90;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 20%;
+        }
+
+        .nav-item .icon { font-size: 20px; }
+        .nav-item.active { color: var(--accent); }
+
+        /* Books Layout */
+        .books-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .book-card-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .book-cover-box {
+            width: 75px;
+            height: 105px;
+            background: #f0ebe1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .book-cover-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .book-info-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .book-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .book-item-title { font-size: 15px; font-weight: 700; color: var(--text-main); }
+        .book-item-author { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+        .genre-badge {
+            display: inline-block;
+            background: #f3efe6;
+            color: #736758;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .status-tag {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+        .status-completed { color: #3b7a57; background: #eaf4ed; }
+        .status-reading { color: #c86432; background: #fdf2e9; }
+        .status-plan { color: #5a738e; background: #edf3f8; }
+
+        .book-quote {
+            font-style: italic;
+            font-size: 12px;
+            color: #6b6255;
+            background: #faf7f2;
+            padding: 8px 10px;
+            border-left: 3px solid #d0c4b4;
+            border-radius: 0 6px 6px 0;
+            margin-top: 8px;
+        }
+
+        .read-dates {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: #efe9e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: #8fae82;
+        }
+
+        /* Sound Ambient Item & Sections */
+        .sound-category-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin: 18px 0 10px 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sound-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .sound-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .sound-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .sound-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .sound-slider {
+            width: 110px;
+            accent-color: #6b8e5c;
+            cursor: pointer;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+        .form-control { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-title">📖 Затишний Трекер</div>
+            <div class="badge-reading" id="readingCountBadge">0 читаю зараз</div>
+        </header>
+
+        <!-- VIEW: HOME / GOAL -->
+        <div id="view-home" class="view-tab active">
+            <!-- Mood Tracker Widget -->
+            <div class="mood-card">
+                <div class="widget-title">✨ Мій стан зараз</div>
+                <div class="mood-options">
+                    <button class="mood-btn" onclick="selectMood(this, 'Чудово')">
+                        <span class="emoji">🤩</span>
+                        <span class="label">Чудово</span>
+                    </button>
+                    <button class="mood-btn" onclick="selectMood(this, 'Затишно')">
+                        <span class="emoji">🌿</span>
+                        <span class="label">Затишно</span>
+                    </button>
+                    <button class="mood-btn" onclick="selectMood(this, 'Спокійно')">
+                        <span class="emoji">☕</span>
+                        <span class="label">Спокійно</span>
+                    </button>
+                    <button class="mood-btn" onclick="selectMood(this, 'Ввтома')">
+                        <span class="emoji">🥱</span>
+                        <span class="label">Ввтома</span>
+                    </button>
+                    <button class="mood-btn" onclick="selectMood(this, 'Сумно')">
+                        <span class="emoji">🌧️</span>
+                        <span class="label">Сумно</span>
+                    </button>
+                </div>
+                <div class="mood-input-row">
+                    <input type="text" id="moodComment" class="mood-input" placeholder="Короткий коментар чи думка...">
+                    <button class="btn-submit-mood" onclick="saveMoodLog()">Зафіксувати</button>
+                </div>
+            </div>
+
+            <h3 style="margin-bottom: 12px; font-size: 16px;">📚 Читаю просто зараз</h3>
+            <div class="books-grid" id="homeReadingGrid"></div>
+        </div>
+
+        <!-- VIEW: SOUNDS -->
+        <div id="view-sounds" class="view-tab">
+            <h3 style="margin-bottom: 16px;">🎧 Атмосферні звуки для фокусу</h3>
+            
+            <div class="sound-category-title">🍃 Природа та пори року</div>
+            
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🌧️ Дощ за вікном</span>
+                    <span class="sound-desc">Затишний шум зливи за склом</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🎪 Дощ по даху / намету</span>
+                    <span class="sound-desc">Дріботіння крапель по поверхні</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🌙 Лісовий вечір та цвіркуни</span>
+                    <span class="sound-desc">Шелест листя, вечірні птахи та цвіркуни</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🌊 Шум моря та прибою</span>
+                    <span class="sound-desc">Розмірені хвилі на березі</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🏞️ Річковий потік</span>
+                    <span class="sound-desc">Дзюрчання лісового струмка чи гірської річки</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🍃 Легкий вітер</span>
+                    <span class="sound-desc">Подих вітру в кронах дерев</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-category-title">🛋️ Затишок та техніка</div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🔥 Потріскування каміну</span>
+                    <span class="sound-desc">Тепло та тріск дров</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🐱 Муркотіння кота</span>
+                    <span class="sound-desc">Теплий низькочастотний звук</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-category-title">☕ Затишні урбаністичні звуки</div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">🚂 Подорож у потязі</span>
+                    <span class="sound-desc">Ритмічний стукіт коліс</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">📖 Бібліотека або кабінет</span>
+                    <span class="sound-desc">Гортання сторінок, шелест та скрип підлоги</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+
+            <div class="sound-card">
+                <div class="sound-info">
+                    <span class="sound-title">☕ Кав'ярня</span>
+                    <span class="sound-desc">Легке дзеленчання чашок та тихий гомін</span>
+                </div>
+                <input type="range" class="sound-slider" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <!-- VIEW: LIBRARY -->
+        <div id="view-library" class="view-tab">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h3>Моя Бібліотека</h3>
+                <button class="btn-submit-mood" onclick="openAddBookModal()">+ Додати</button>
+            </div>
+            <div class="books-grid" id="fullLibraryGrid"></div>
+        </div>
+
+        <!-- VIEW: ANALYTICS -->
+        <div id="view-analytics" class="view-tab">
+            <h3 style="margin-bottom: 16px;">📊 Аналітика та історія стану</h3>
+            <div class="mood-card" id="analyticsMoodList">
+                <p style="color: var(--text-muted); text-align: center;">Записи стану з'являться тут після фіксації</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="switchNav('home', this)">
+            <span class="icon">🏠</span>
+            <span>Головна</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('sounds', this)">
+            <span class="icon">🎵</span>
+            <span>Звуки</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('library', this)">
+            <span class="icon">📚</span>
+            <span>Бібліотека</span>
+        </button>
+        <button class="nav-item" onclick="openAddBookModal()">
+            <span class="icon">➕</span>
+            <span>Додати</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('analytics', this)">
+            <span class="icon">📊</span>
+            <span>Аналітика</span>
+        </button>
+    </nav>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="bookModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 16px;" id="modalTitle">Додати / Редагувати книгу</h3>
+            <form id="bookForm" onsubmit="handleBookSave(event)">
+                <input type="hidden" id="bookId">
+                <div class="form-group">
+                    <label>Назва книги</label>
+                    <input type="text" id="bTitle" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Автор</label>
+                    <input type="text" id="bAuthor" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>Жанр</label>
+                    <input type="text" id="bGenre" class="form-control" placeholder="Сучасна проза, Психологія...">
+                </div>
+                <div class="form-group">
+                    <label>URL обкладинки (посилання на картинку)</label>
+                    <input type="url" id="bCover" class="form-control" placeholder="https://...">
+                </div>
+                <div class="form-group">
+                    <label>Статус</label>
+                    <select id="bStatus" class="form-control">
+                        <option value="reading">📖 Читаю зараз</option>
+                        <option value="completed">✅ Прочитано</option>
+                        <option value="plan">📌 У планах</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Всього сторінок</label>
+                        <input type="number" id="bTotalPages" class="form-control" placeholder="350">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Я зараз на сторінці</label>
+                        <input type="number" id="bCurrentPage" class="form-control" placeholder="120">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Дата початку</label>
+                        <input type="date" id="bStartDate" class="form-control">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Дата завершення</label>
+                        <input type="date" id="bEndDate" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Оцінка книги (від 0.0 до 5.0, наприклад 4.5 або 4.7)</label>
+                    <input type="number" step="0.1" min="0" max="5" id="bRating" class="form-control" placeholder="4.7">
+                </div>
+                <div class="form-group">
+                    <label>Цитата чи враження</label>
+                    <textarea id="bQuote" class="form-control" rows="2"></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 16px;">
+                    <button type="button" class="form-control" onclick="closeModal()">Скасувати</button>
+                    <button type="submit" class="btn-submit-mood" style="flex:1;">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const initialBooks = [
+            {
+                id: "1",
+                title: "Часосховище",
+                author: "Георгі Господінов",
+                genre: "Сучасна проза",
+                cover: "",
+                emojiIcon: "📘",
+                status: "completed",
+                quote: "«Все просто: немає майбутнього — голосуй за минуле.»",
+                totalPages: 320,
+                currentPage: 320,
+                rating: 4.8,
+                startDate: "",
+                endDate: ""
+            },
+            {
+                id: "2",
+                title: "Сім чоловіків Евелін Г'юґо",
+                author: "Тейлор Рейд",
+                genre: "Роман",
+                cover: "",
+                emojiIcon: "📖",
+                status: "completed",
+                quote: "«Ніхто ні на що не заслуговує. Це просто питання того, хто сам хоче піти та взяти це собі.»",
+                totalPages: 440,
+                currentPage: 440,
+                rating: 4.9,
+                startDate: "",
+                endDate: ""
+            },
+            {
+                id: "3",
+                title: "Бог завжди подорожує інкогніто",
+                author: "Лоран Гунель",
+                genre: "Психологія / Філософія",
+                cover: "",
+                emojiIcon: "📚",
+                status: "reading",
+                quote: "«Свобода — усередині нас. Вона має виходити з нас. Не очікуй, що вона прийде десь іззовні.»",
+                totalPages: 380,
+                currentPage: 190,
+                rating: 4.7,
+                startDate: "",
+                endDate: ""
+            },
+            {
+                id: "4",
+                title: "Дорослі діти емоційно незрілих батьків",
+                author: "Ліндсі К. Гібсон",
+                genre: "Психологія",
+                cover: "",
+                emojiIcon: "🧠",
+                status: "plan",
+                quote: "",
+                totalPages: 280,
+                currentPage: 0,
+                rating: 5.0,
+                startDate: "",
+                endDate: ""
+            }
+        ];
+
+        let selectedMoodState = '';
+        let books = JSON.parse(localStorage.getItem('cozy_books'));
+        if (!books || books.length === 0) {
+            books = initialBooks;
+            localStorage.setItem('cozy_books', JSON.stringify(books));
+        }
+        
+        let moodLogs = JSON.parse(localStorage.getItem('cozy_moods')) || [];
+
+        function saveStorage() {
+            localStorage.setItem('cozy_books', JSON.stringify(books));
+            localStorage.setItem('cozy_moods', JSON.stringify(moodLogs));
+        }
+
+        function switchNav(tab, btn) {
+            document.querySelectorAll('.view-tab').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(`view-${tab}`).classList.add('active');
+            if(btn) btn.classList.add('active');
+            renderApp();
+        }
+
+        function selectMood(el, mood) {
+            document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            selectedMoodState = mood;
+        }
+
+        function saveMoodLog() {
+            const comment = document.getElementById('moodComment').value;
+            if(!selectedMoodState) {
+                alert('Будь ласка, оберіть ваш стан!');
+                return;
+            }
+            moodLogs.unshift({
+                mood: selectedMoodState,
+                comment: comment,
+                date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            });
+            document.getElementById('moodComment').value = '';
+            saveStorage();
+            alert('Стан зафіксовано! ✨');
+            renderAnalytics();
+        }
+
+        function renderApp() {
+            const readingBooks = books.filter(b => b.status === 'reading');
+            document.getElementById('readingCountBadge').textContent = `${readingBooks.length} читаю зараз`;
+
+            // Render Home Reading Grid
+            const homeGrid = document.getElementById('homeReadingGrid');
+            homeGrid.innerHTML = readingBooks.length ? '' : '<p style="color: var(--text-muted)">Наразі немає активних книг</p>';
+            
+            readingBooks.forEach(b => homeGrid.appendChild(createBookCard(b, true)));
+
+            // Render Full Library Grid
+            const libGrid = document.getElementById('fullLibraryGrid');
+            libGrid.innerHTML = '';
+            books.forEach(b => libGrid.appendChild(createBookCard(b, true)));
+
+            renderAnalytics();
+        }
+
+        function getStatusText(status) {
+            if(status === 'completed') return { text: 'Прочитано', class: 'status-completed' };
+            if(status === 'reading') return { text: 'Читаю', class: 'status-reading' };
+            return { text: 'У планах', class: 'status-plan' };
+        }
+
+        function formatDate(dStr) {
+            if(!dStr) return '';
+            const d = new Date(dStr);
+            return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+        }
+
+        function createBookCard(book, showActions = true) {
+            const card = document.createElement('div');
+            card.className = 'book-card-item';
+            
+            const total = parseInt(book.totalPages) || 0;
+            const current = parseInt(book.currentPage) || 0;
+            const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+            const statusInfo = getStatusText(book.status);
+
+            let dateDisplay = '';
+            if(book.startDate || book.endDate) {
+                dateDisplay = `<div class="read-dates">🗓️ ${book.startDate ? formatDate(book.startDate) : '...'} — ${book.endDate ? formatDate(book.endDate) : 'тепер'}</div>`;
+            }
+
+            card.innerHTML = `
+                <div class="book-cover-box">
+                    ${book.cover ? `<img src="${book.cover}">` : (book.emojiIcon || '📖')}
+                </div>
+                <div class="book-info-box">
+                    <div>
+                        <div class="book-header-row">
+                            <div class="book-item-title">${book.title}</div>
+                            <span class="status-tag ${statusInfo.class}">${statusInfo.text}</span>
+                        </div>
+                        <div class="book-item-author">${book.author || 'Автор не вказаний'}</div>
+                        ${book.genre ? `<span class="genre-badge">${book.genre}</span>` : ''}
+                    </div>
+
+                    ${book.quote ? `<div class="book-quote">${book.quote}</div>` : ''}
+                    ${dateDisplay}
+
+                    ${total ? `
+                        <div style="margin-top:8px;">
+                            <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between;">
+                                <span>Прогрес: ${current}/${total} стор.</span>
+                                <span><strong>${pct}%</strong></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+                        </div>
+                    ` : ''}
+
+                    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                        ${book.rating ? `<span style="font-size:12px; font-weight:700; color:#b5832a;">⭐ ${book.rating} / 5.0</span>` : '<span></span>'}
+                        <button onclick="editBook('${book.id}')" style="font-size:12px; border:none; background:none; color:var(--accent); cursor:pointer; font-weight:700;">✏️ Редагувати</button>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderAnalytics() {
+            const container = document.getElementById('analyticsMoodList');
+            if(!moodLogs.length) return;
+            container.innerHTML = moodLogs.map(l => `
+                <div style="padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;">
+                    <strong>${l.date} - ${l.mood}</strong>: ${l.comment || 'без коментаря'}
+                </div>
+            `).join('');
+        }
+
+        function openAddBookModal() {
+            document.getElementById('bookForm').reset();
+            document.getElementById('bookId').value = '';
+            document.getElementById('modalTitle').textContent = 'Додати нову книгу';
+            document.getElementById('bookModal').classList.add('active');
+        }
+
+        function editBook(id) {
+            const b = books.find(x => x.id === id);
+            if(!b) return;
+            document.getElementById('modalTitle').textContent = 'Редагувати книгу';
+            document.getElementById('bookId').value = b.id;
+            document.getElementById('bTitle').value = b.title || '';
+            document.getElementById('bAuthor').value = b.author || '';
+            document.getElementById('bGenre').value = b.genre || '';
+            document.getElementById('bCover').value = b.cover || '';
+            document.getElementById('bTotalPages').value = b.totalPages || '';
+            document.getElementById('bCurrentPage').value = b.currentPage || '';
+            document.getElementById('bStatus').value = b.status || 'reading';
+            document.getElementById('bQuote').value = b.quote || '';
+            document.getElementById('bRating').value = b.rating || '';
+            document.getElementById('bStartDate').value = b.startDate || '';
+            document.getElementById('bEndDate').value = b.endDate || '';
+            document.getElementById('bookModal').classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('bookModal').classList.remove('active'); }
+
+        function handleBookSave(e) {
+            e.preventDefault();
+            const id = document.getElementById('bookId').value;
+            const data = {
+                id: id || Date.now().toString(),
+                title: document.getElementById('bTitle').value,
+                author: document.getElementById('bAuthor').value,
+                genre: document.getElementById('bGenre').value,
+                cover: document.getElementById('bCover').value,
+                totalPages: document.getElementById('bTotalPages').value,
+                currentPage: document.getElementById('bCurrentPage').value,
+                status: document.getElementById('bStatus').value,
+                quote: document.getElementById('bQuote').value,
+                rating: document.getElementById('bRating').value,
+                startDate: document.getElementById('bStartDate').value,
+                endDate: document.getElementById('bEndDate').value
+            };
+
+            if(id) {
+                const idx = books.findIndex(x => x.id === id);
+                books[idx] = { ...books[idx], ...data };
+            } else {
+                books.push(data);
+            }
+            saveStorage();
+            closeModal();
+            renderApp();
+        }
+
+        renderApp();
+    </script>
+</body>
+</html>
